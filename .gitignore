@@ -5,6 +5,7 @@ coverage
 uploads/avatars/*
 !uploads/avatars/.gitkeep
 *.log
+*.tsbuildinfo
 .DS_Store
 prisma/*.db
 prisma/*.db-journal
