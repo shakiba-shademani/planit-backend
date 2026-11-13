@@ -29,6 +29,7 @@ async function bootstrap() {
     .setDescription('Backend for the To Do app')
     .setVersion('1.0')
     .addBearerAuth()
+    .addServer(process.env.PUBLIC_URL ?? 'http://localhost:3001')
     .build();
   SwaggerModule.setup('docs', app, SwaggerModule.createDocument(app, swagger));
 
