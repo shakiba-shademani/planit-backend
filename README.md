@@ -1,6 +1,6 @@
-# To Do API
+# Plan It API
 
-NestJS backend for the To Do app — JWT auth, daily tasks, and user profiles (including avatars).  
+NestJS backend for Plan It — JWT auth, tasks, goals, habits, reminders, and user profiles (including avatars).  
 **Hosted on AWS (EC2 + RDS).**
 
 ## Live demo
@@ -18,11 +18,11 @@ Deployed on AWS with **EC2**, **RDS**, **Nginx**, and **HTTPS** (single `t3.micr
 
 Login page:
 
-![To Do login page](docs/screenshots/frontend-home.png)
+![Plan It login page](docs/screenshots/frontend-home.png)
 
 Swagger UI (server set to `/api`):
 
-![Swagger To Do API](docs/screenshots/swagger-docs.png)
+![Swagger Plan It API](docs/screenshots/swagger-docs.png)
 
 API endpoints in Swagger:
 

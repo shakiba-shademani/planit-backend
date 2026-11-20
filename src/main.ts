@@ -25,8 +25,8 @@ async function bootstrap() {
   );
 
   const swagger = new DocumentBuilder()
-    .setTitle('To Do API')
-    .setDescription('Backend for the To Do app')
+    .setTitle('Plan It API')
+    .setDescription('Backend for the Plan It planner app')
     .setVersion('1.0')
     .addBearerAuth()
     .addServer(process.env.PUBLIC_URL ?? 'http://localhost:3001')
@@ -35,7 +35,7 @@ async function bootstrap() {
 
   const port = Number(process.env.PORT ?? 3001);
   await app.listen(port);
-  console.log(`To Do API running on http://localhost:${port}`);
+  console.log(`Plan It API running on http://localhost:${port}`);
   console.log(`Swagger docs at http://localhost:${port}/docs`);
 }
 
