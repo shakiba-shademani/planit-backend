@@ -20,6 +20,17 @@ enum RecurrenceFrequency {
   MONTHLY
 }
 
+enum GoalStatus {
+  ACTIVE
+  DONE
+  ARCHIVED
+}
+
+enum HabitFrequency {
+  DAILY
+  WEEKLY
+}
+
 model User {
   id            String         @id @default(uuid())
   username      String         @unique
@@ -31,7 +42,50 @@ model User {
   tasks         Task[]
   projects      Project[]
   tags          Tag[]
+  goals         Goal[]
+  habits        Habit[]
   refreshTokens RefreshToken[]
+}
+
+model Goal {
+  id         String     @id @default(uuid())
+  title      String
+  notes      String?
+  status     GoalStatus @default(ACTIVE)
+  targetDate DateTime?  @db.Date
+  color      String?
+  userId     String
+  user       User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt  DateTime   @default(now())
+  updatedAt  DateTime   @updatedAt
+
+  @@index([userId, status])
+}
+
+model Habit {
+  id        String         @id @default(uuid())
+  title     String
+  frequency HabitFrequency @default(DAILY)
+  active    Boolean        @default(true)
+  color     String?
+  userId    String
+  user      User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  logs      HabitLog[]
+  createdAt DateTime       @default(now())
+  updatedAt DateTime       @updatedAt
+
+  @@index([userId, active])
+}
+
+model HabitLog {
+  id        String   @id @default(uuid())
+  habitId   String
+  habit     Habit    @relation(fields: [habitId], references: [id], onDelete: Cascade)
+  date      DateTime @db.Date
+  createdAt DateTime @default(now())
+
+  @@unique([habitId, date])
+  @@index([habitId, date])
 }
 
 model Project {
