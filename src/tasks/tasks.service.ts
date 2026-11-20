@@ -45,11 +45,16 @@ const PRIORITY_RANK: Record<TaskPriority, number> = {
 export class TasksService {
   constructor(private readonly prisma: PrismaService) {}
 
-  async list(user: User, date: string) {
+  async list(
+    user: User,
+    query: { date?: string; from?: string; to?: string },
+  ) {
+    const dateFilter = this.resolveListDateFilter(query);
+
     const tasks = await this.prisma.task.findMany({
       where: {
         userId: user.id,
-        date: parseDateOnly(date),
+        date: dateFilter,
         parentId: null,
       },
       include: taskInclude,
@@ -58,6 +63,52 @@ export class TasksService {
     return tasks
       .map((task) => toTaskResponse(task as TaskWithRelations))
       .sort(compareTaskResponses);
+  }
+
+  private resolveListDateFilter(query: {
+    date?: string;
+    from?: string;
+    to?: string;
+  }) {
+    const hasDate = Boolean(query.date);
+    const hasFrom = Boolean(query.from);
+    const hasTo = Boolean(query.to);
+
+    if (hasDate && (hasFrom || hasTo)) {
+      throw new BadRequestException(
+        'Provide either date or from+to, not both',
+      );
+    }
+
+    if (hasDate && query.date) {
+      return parseDateOnly(query.date);
+    }
+
+    if (hasFrom && hasTo && query.from && query.to) {
+      if (query.from > query.to) {
+        throw new BadRequestException('from must be on or before to');
+      }
+
+      const daySpan =
+        Math.round(
+          (parseDateOnly(query.to).getTime() -
+            parseDateOnly(query.from).getTime()) /
+            (24 * 60 * 60 * 1000),
+        ) + 1;
+
+      if (daySpan > 62) {
+        throw new BadRequestException('Date range cannot exceed 62 days');
+      }
+
+      return {
+        gte: parseDateOnly(query.from),
+        lte: parseDateOnly(query.to),
+      };
+    }
+
+    throw new BadRequestException(
+      'Provide either date or both from and to query params',
+    );
   }
 
   async create(user: User, dto: CreateTaskDto) {

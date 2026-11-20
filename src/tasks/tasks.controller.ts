@@ -28,7 +28,7 @@ export class TasksController {
 
   @Get()
   list(@CurrentUser() user: User, @Query() query: TasksQueryDto) {
-    return this.tasksService.list(user, query.date);
+    return this.tasksService.list(user, query);
   }
 
   @Post()
