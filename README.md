@@ -97,3 +97,10 @@ Local API: http://localhost:3001
 Local docs: http://localhost:3001/docs
 
 Set `PUBLIC_URL` in `.env` to the public API base (locally `http://localhost:3001`; on AWS typically `https://my-todo.duckdns.org/api`) so avatar URLs and Swagger’s server match the environment.
+
+## Phase 1 planning APIs
+
+- `GET/POST/PATCH/DELETE /projects`
+- `GET/POST/PATCH/DELETE /tags`
+- Extended `GET/POST/PATCH/DELETE /tasks` with priority, notes, start/end time, project, tags, reminder, recurrence, and subtasks (`parentId`)
+
