@@ -191,6 +191,7 @@ export class TasksService {
             ? {
                 reminderAt:
                   dto.reminderAt === null ? null : new Date(dto.reminderAt),
+                reminderSentAt: null,
               }
             : {}),
           ...(dto.recurrence !== undefined

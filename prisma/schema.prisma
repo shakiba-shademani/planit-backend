@@ -32,19 +32,20 @@ enum HabitFrequency {
 }
 
 model User {
-  id            String         @id @default(uuid())
-  username      String         @unique
-  passwordHash  String
-  displayName   String
-  avatarPath    String?
-  createdAt     DateTime       @default(now())
-  updatedAt     DateTime       @updatedAt
-  tasks         Task[]
-  projects      Project[]
-  tags          Tag[]
-  goals         Goal[]
-  habits        Habit[]
-  refreshTokens RefreshToken[]
+  id                String             @id @default(uuid())
+  username          String             @unique
+  passwordHash      String
+  displayName       String
+  avatarPath        String?
+  createdAt         DateTime           @default(now())
+  updatedAt         DateTime           @updatedAt
+  tasks             Task[]
+  projects          Project[]
+  tags              Tag[]
+  goals             Goal[]
+  habits            Habit[]
+  pushSubscriptions PushSubscription[]
+  refreshTokens     RefreshToken[]
 }
 
 model Goal {
@@ -117,30 +118,47 @@ model Tag {
 }
 
 model Task {
-  id          String              @id @default(uuid())
-  title       String
-  notes       String?
-  date        DateTime            @db.Date
-  startTime   String?
-  endTime     String?
-  priority    TaskPriority        @default(MEDIUM)
-  reminderAt  DateTime?
-  recurrence  RecurrenceFrequency @default(NONE)
-  done        Boolean             @default(false)
-  userId      String
-  user        User                @relation(fields: [userId], references: [id], onDelete: Cascade)
-  projectId   String?
-  project     Project?            @relation(fields: [projectId], references: [id], onDelete: SetNull)
-  parentId    String?
-  parent      Task?               @relation("TaskSubtasks", fields: [parentId], references: [id], onDelete: Cascade)
-  subtasks    Task[]              @relation("TaskSubtasks")
-  tags        TaskTag[]
-  createdAt   DateTime            @default(now())
-  updatedAt   DateTime            @updatedAt
+  id              String              @id @default(uuid())
+  title           String
+  notes           String?
+  date            DateTime            @db.Date
+  startTime       String?
+  endTime         String?
+  priority        TaskPriority        @default(MEDIUM)
+  reminderAt      DateTime?
+  reminderSentAt  DateTime?
+  recurrence      RecurrenceFrequency @default(NONE)
+  done            Boolean             @default(false)
+  userId          String
+  user            User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+  projectId       String?
+  project         Project?            @relation(fields: [projectId], references: [id], onDelete: SetNull)
+  parentId        String?
+  parent          Task?               @relation("TaskSubtasks", fields: [parentId], references: [id], onDelete: Cascade)
+  subtasks        Task[]              @relation("TaskSubtasks")
+  tags            TaskTag[]
+  createdAt       DateTime            @default(now())
+  updatedAt       DateTime            @updatedAt
 
   @@index([userId, date])
   @@index([userId, projectId])
   @@index([parentId])
+  @@index([reminderAt, reminderSentAt])
+}
+
+model PushSubscription {
+  id        String   @id @default(uuid())
+  endpoint  String
+  p256dh    String
+  auth      String
+  userAgent String?
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([userId, endpoint])
+  @@index([userId])
 }
 
 model TaskTag {
