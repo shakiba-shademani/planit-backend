@@ -1,30 +1,31 @@
 # Plan It API
 
-NestJS backend for Plan It — JWT auth, tasks, goals, habits, reminders, and user profiles (including avatars).  
-**Hosted on AWS (EC2 + RDS).**
+NestJS backend for Plan It — JWT auth, tasks, goals, habits, web-push reminders, and user profiles (including avatars).  
+**Live API behind [my-planit.duckdns.org](https://my-planit.duckdns.org), hosted on AWS (EC2 + RDS).**
 
 ## Live demo
 
 | | |
 | --- | --- |
-| App | [https://my-todo.duckdns.org](https://my-todo.duckdns.org) |
-| Swagger (`/docs`) | [https://my-todo.duckdns.org/docs](https://my-todo.duckdns.org/docs) |
-| API base | `https://my-todo.duckdns.org/api` |
+| App | [https://my-planit.duckdns.org](https://my-planit.duckdns.org) |
+| Swagger (`/docs`) | [https://my-planit.duckdns.org/docs](https://my-planit.duckdns.org/docs) |
+| API base | `https://my-planit.duckdns.org/api` |
 | Health | `GET /api/health` → `{ "ok": true }` |
 
-Deployed on AWS with **EC2**, **RDS**, **Nginx**, and **HTTPS** (single `t3.micro` instance).
+Production runs on a single AWS `t3.micro` **EC2** instance with **RDS** (PostgreSQL), **Nginx**, and **HTTPS** (Let’s Encrypt on DuckDNS).  
+Nginx proxies `/api` and `/docs` to this NestJS app; the frontend is served from the same host.
 
 ### Screenshots
 
-Login page:
+Login page (Plan It):
 
 ![Plan It login page](docs/screenshots/frontend-home.png)
 
-Swagger UI (server set to `/api`):
+Swagger UI (`Plan It API`, server `https://my-planit.duckdns.org/api`):
 
 ![Swagger Plan It API](docs/screenshots/swagger-docs.png)
 
-API endpoints in Swagger:
+API groups in Swagger (tasks, goals, habits, push, …):
 
 ![Swagger endpoints](docs/screenshots/swagger-endpoints.png)
 
@@ -33,6 +34,7 @@ API endpoints in Swagger:
 - **NestJS** + TypeScript — HTTP API
 - **Prisma** + **PostgreSQL** — data layer (local Docker / AWS RDS)
 - **JWT** (access + refresh) — auth
+- **Web Push** (`web-push` + VAPID) — scheduled task reminders
 - **Swagger** (`/docs`) — interactive API docs
 - **Nginx** — reverse proxy, TLS termination, `/api` routing
 - **AWS EC2** (`t3.micro`) + **RDS** — hosting
@@ -66,14 +68,17 @@ flowchart LR
   NestJS --> RDS[(RDS PostgreSQL)]
 ```
 
-## Deployment choices
+## Deployment on AWS
 
-- **EC2** — one small VM is enough for this app; simple SSH deploy and full control without a container platform.
-- **Nginx** — terminates TLS, serves the frontend, and proxies `/api` (and `/docs`) to NestJS so the browser talks to one origin.
-- **HTTPS** — Let’s Encrypt on the DuckDNS hostname; keeps login and tokens off plain HTTP.
-- **RDS** — managed Postgres separate from the app process; survives EC2 restarts and keeps DB credentials out of the app image/disk habit.
+Plan It API is part of the same AWS portfolio stack as the frontend:
 
-This is a learning / portfolio deploy on a single `t3.micro`, not a multi-AZ or auto-scaling setup.
+- **EC2 (`t3.micro`)** — NestJS runs on the VM (SSH deploy); no container platform required for this size.
+- **RDS (PostgreSQL)** — managed DB separate from the app process; survives EC2 restarts.
+- **Nginx** — TLS termination on `my-planit.duckdns.org`, serves the frontend, proxies `/api` + `/docs` to NestJS (one browser origin).
+- **HTTPS (Let’s Encrypt)** — keeps auth tokens off plain HTTP and enables browser **Web Push**.
+- **VAPID env** — `VAPID_PUBLIC_KEY` / `VAPID_PRIVATE_KEY` / `VAPID_SUBJECT` configured on the server for reminder delivery.
+
+This is a learning / portfolio deploy, not a multi-AZ or auto-scaling setup.
 
 ## Run locally
 
@@ -96,11 +101,27 @@ npm run start:dev
 Local API: http://localhost:3001  
 Local docs: http://localhost:3001/docs
 
-Set `PUBLIC_URL` in `.env` to the public API base (locally `http://localhost:3001`; on AWS typically `https://my-todo.duckdns.org/api`) so avatar URLs and Swagger’s server match the environment.
+Set `PUBLIC_URL` in `.env` to the public API base (locally `http://localhost:3001`; on AWS typically `https://my-planit.duckdns.org/api`) so avatar URLs and Swagger’s server match the environment.
 
-## Phase 1 planning APIs
+For web push, also set `VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY`, and `VAPID_SUBJECT` (see `.env.example`).
+
+## API surface
+
+### Auth & users
+
+- Auth: login / register / refresh
+- Users: current user profile + avatar upload
+
+### Planning
 
 - `GET/POST/PATCH/DELETE /projects`
 - `GET/POST/PATCH/DELETE /tags`
-- Extended `GET/POST/PATCH/DELETE /tasks` with priority, notes, start/end time, project, tags, reminder, recurrence, and subtasks (`parentId`)
+- Extended `GET/POST/PATCH/DELETE /tasks` with priority, notes, start/end time, project, tags, reminder (`reminderAt`), recurrence, and subtasks (`parentId`)
+- Task list by date range (for calendar / home views)
+- `GET/POST/PATCH/DELETE /goals`
+- `GET/POST/PATCH/DELETE /habits` + daily check-in
 
+### Push reminders
+
+- Subscribe / unsubscribe browser push endpoints
+- Scheduled delivery for due `reminderAt` values
